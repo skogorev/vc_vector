@@ -123,6 +123,10 @@ size_t vc_vector_get_default_count_of_elements() {
   return DEFAULT_COUNT_OF_ELEMENETS;
 }
 
+size_t vc_vector_struct_size() {
+  return sizeof(struct vc_vector);
+}
+
 // ----------------------------------------------------------------------------
 
 // Element access

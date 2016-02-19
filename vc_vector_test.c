@@ -261,7 +261,8 @@ void vc_vector_run_tests() {
   test_vc_vector_modifiers();
 }
 
-//int main() {
-//  vc_vector_run_tests();
-//  return 0;
-//}
+int main() {
+ vc_vector_run_tests();
+ printf("Tests passed.\n");
+ return 0;
+}

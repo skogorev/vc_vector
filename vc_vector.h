@@ -29,6 +29,9 @@ float vc_vector_get_growth_factor();
 // Returns constant value of the vector default count of elements.
 size_t vc_vector_get_default_count_of_elements();
 
+// Returns constant value of the vector struct size.
+size_t vc_vector_struct_size();
+
 // ----------------------------------------------------------------------------
 // Element access
 // ----------------------------------------------------------------------------

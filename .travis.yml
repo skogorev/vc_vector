@@ -1,0 +1,8 @@
+language: c
+compiler:
+  - gcc
+script:
+  - gcc vc_vector_test.c -o vc_vector_test.o -c -std=gnu99
+  - gcc vc_vector.c -o vc_vector.o -c -std=gnu99
+  - gcc -o test_runner vc_vector_test.o vc_vector.o
+  - ./test_runner
