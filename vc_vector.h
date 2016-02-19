@@ -14,8 +14,14 @@ typedef void (vc_vector_free_func)(void *);
 // Constructs an empty vector with an reserver size for count_elements.
 vc_vector* vc_vector_create(size_t count_elements, size_t size_of_element, vc_vector_free_func* free_func);
 
+// Constructs a copy of an existing vector.
+vc_vector* vc_vector_create_copy(const vc_vector* vector);
+
 // Releases the vector.
 void vc_vector_release(vc_vector* vector);
+
+// Compares vector content
+bool vc_vector_is_equals(vc_vector* vector1, vc_vector* vector2);
 
 // Returns constant value of the vector growth factor.
 float vc_vector_get_growth_factor();

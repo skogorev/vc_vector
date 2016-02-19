@@ -55,6 +55,19 @@ void test_vc_vector_create() {
   // Creating vector with zero size of single element
   vector = vc_vector_create(0, 0, NULL);
   ASSERT_EQ(NULL, vector);
+  
+  // Creating copy of vector
+  vector = vc_vector_create(0, size_of_type, NULL);
+  ASSERT_NE(NULL, vector);
+  for (int i = 0; i < test_count_of_elements; ++i) {
+    ASSERT_TRUE(vc_vector_push_back(vector, &i));
+  }
+  
+  vc_vector* vector_copy = vc_vector_create_copy(vector);
+  ASSERT_NE(NULL, vector_copy);
+  ASSERT_TRUE(vc_vector_is_equals(vector, vector_copy));
+  
+  vc_vector_release(vector);
 }
 
 void test_vc_vector_element_access() {

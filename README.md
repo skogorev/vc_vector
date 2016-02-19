@@ -2,7 +2,7 @@
 Fast simple C vector implementation
 
 
-# Getting started
+## Getting started
 ```
 #include "vc_vector.h"
 ...

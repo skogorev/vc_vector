@@ -77,6 +77,23 @@ vc_vector* vc_vector_create(size_t count_elements, size_t size_of_element, vc_ve
   return v;
 }
 
+vc_vector* vc_vector_create_copy(const vc_vector* vector) {
+  vc_vector* new_vector = vc_vector_create(vector->reserved_size / vector->element_count,
+                                           vector->element_size,
+                                           vector->free_func);
+  if (unlikely(!new_vector)) {
+    return new_vector;
+  }
+  
+  if (unlikely(!vc_vector_append(new_vector, vector->data, vector->element_count))) {
+    vc_vector_release(new_vector);
+    new_vector = NULL;
+    return new_vector;
+  }
+  
+  return new_vector;
+}
+
 void vc_vector_release(vc_vector* vector) {
   if (unlikely(vector->free_func != NULL)) {
     vc_vector_call_free_func_all(vector);
@@ -87,6 +104,15 @@ void vc_vector_release(vc_vector* vector) {
   }
   
   free(vector);
+}
+
+bool vc_vector_is_equals(vc_vector* vector1, vc_vector* vector2) {
+  const size_t size_vector1 = vc_vector_size(vector1);
+  if (unlikely(size_vector1 != vc_vector_size(vector2))) {
+    return false;
+  }
+  
+  return memcmp(vector1->data, vector2->data, size_vector1) == 0;
 }
 
 float vc_vector_get_growth_factor() {
