@@ -12,6 +12,7 @@
 
 #define GROWTH_FACTOR 1.5
 #define DEFAULT_COUNT_OF_ELEMENETS 8
+#define MINIMUM_COUNT_OF_ELEMENTS 2
 
 // ----------------------------------------------------------------------------
 
@@ -64,7 +65,7 @@ vc_vector* vc_vector_create(size_t count_elements, size_t size_of_element, vc_ve
     v->element_size = size_of_element;
     v->free_func = free_func;
     
-    if (unlikely(count_elements == 0)) {
+    if (unlikely(count_elements < MINIMUM_COUNT_OF_ELEMENTS)) {
       count_elements = DEFAULT_COUNT_OF_ELEMENETS;
     }
     
@@ -267,8 +268,15 @@ bool vc_vector_erase_range(vc_vector* vector, size_t first_index, size_t last_in
 }
 
 bool vc_vector_append(vc_vector* vector, const void* values, size_t count) {
-  while ((vector->element_count + count) * vector->element_size > vector->reserved_size) {
-    if (unlikely(!vc_vector_realloc(vector, vc_vector_max_count(vector) * GROWTH_FACTOR))) {
+  const size_t count_new = count + vc_vector_count(vector);
+  
+  if (vc_vector_max_count(vector) < count_new) {
+    size_t max_count_to_reserved = vc_vector_max_count(vector) * GROWTH_FACTOR;
+    while (count_new > max_count_to_reserved) {
+      max_count_to_reserved *= GROWTH_FACTOR;
+    }
+    
+    if (!vc_vector_realloc(vector, max_count_to_reserved)) {
       return false;
     }
   }
@@ -277,7 +285,7 @@ bool vc_vector_append(vc_vector* vector, const void* values, size_t count) {
     return false;
   }
   
-  vector->element_count += count;
+  vector->element_count = count_new;
   return true;
 }
 
