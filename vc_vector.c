@@ -41,14 +41,15 @@ bool vc_vector_realloc(vc_vector* vector, size_t new_count) {
   return true;
 }
 
-void vc_vector_call_free_func(vc_vector* vector, void* begin, void* end) {
-  for (void* i = begin; i != end; i = vc_vector_next(vector, i)) {
-    vector->free_func(i);
+// [first_index, last_index)
+void vc_vector_call_free_func(vc_vector* vector, size_t first_index, size_t last_index) {
+  for (size_t i = first_index; i < last_index; ++i) {
+    vector->free_func(vc_vector_at(vector, i));
   }
 }
 
 void vc_vector_call_free_func_all(vc_vector* vector) {
-  vc_vector_call_free_func(vector, vc_vector_begin(vector), vc_vector_end(vector));
+  vc_vector_call_free_func(vector, 0, vc_vector_count(vector));
 }
 
 // ----------------------------------------------------------------------------
@@ -252,7 +253,7 @@ bool vc_vector_erase(vc_vector* vector, size_t index) {
 
 bool vc_vector_erase_range(vc_vector* vector, size_t first_index, size_t last_index) {
   if (unlikely(vector->free_func != NULL)) {
-    vc_vector_call_free_func(vector, vc_vector_at(vector, first_index), vc_vector_at(vector, last_index));
+    vc_vector_call_free_func(vector, first_index, last_index);
   }
   
   if (unlikely(!memmove(vc_vector_at(vector, first_index),
@@ -298,9 +299,17 @@ bool vc_vector_pop_back(vc_vector* vector) {
 }
 
 bool vc_vector_set(vc_vector* vector, size_t index, const void* value) {
+  if (unlikely(vector->free_func != NULL)) {
+    vector->free_func(vc_vector_at(vector, index));
+  }
+  
   return memcpy(vc_vector_at(vector, index), value, vector->element_size) != NULL;
 }
 
 bool vc_vector_set_multiple(vc_vector* vector, size_t index, const void* values, size_t count) {
+  if (unlikely(vector->free_func != NULL)) {
+    vc_vector_call_free_func(vector, index, index + count);
+  }
+  
   return memcpy(vc_vector_at(vector, index), values, vector->element_size * count) != NULL;
 }
