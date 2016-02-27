@@ -1,5 +1,6 @@
 #include "vc_vector_test.h"
 #include <stdlib.h>
+#include <string.h>
 #include "vc_vector.h"
 
 #define ASSERT_EQ(expected, actual) if ((expected) != (actual)) { \
@@ -25,8 +26,8 @@
                                            } \
                                            printf("\n");
 
-#define PRINT_VECTOR_INT(vector) PRINT_VECTOR(vector, "%u; ", int)
-
+#define PRINT_VECTOR_INT(vector) PRINT_VECTOR(vector, int, "%u; ")
+#define PRINT_VECTOR_STR(vector) PRINT_VECTOR(vector, char *, "%s; ");
 // ----------------------------------------------------------------------------
 
 void test_vc_vector_create() {
@@ -179,7 +180,7 @@ void test_vc_vector_modifiers() {
   vc_vector* vector = vc_vector_create(0, size_of_element, NULL);
   ASSERT_NE(NULL, vector);
   
-  // Appen test
+  // Append test
   
   ASSERT_EQ(true, vc_vector_append(vector, (void*)begin, count_of_elements));
   
@@ -253,12 +254,58 @@ void test_vc_vector_modifiers() {
   vc_vector_release(vector);
 }
 
+void test_vc_vector_strfreefunc(void *data) {
+  free(*(char **)data);
+}
+
+void test_vc_vector_with_strfreefunc() {
+  // creates a vector of pointers to char, i.e. a vector of variable sized strings
+  vc_vector* vector = vc_vector_create(3, sizeof(char *), test_vc_vector_strfreefunc);
+  ASSERT_NE(NULL, vector);
+
+  char *strs[9];
+  strs[0] = strdup("abcde");
+  strs[1] = strdup("edcba");
+  strs[2] = strdup("1234554321");
+  strs[3] = strdup("!@#$%");
+  strs[4] = strdup("not empty string");
+  strs[5] = strdup("");
+  strs[6] = strdup("Hello World");
+  strs[7] = strdup("xxxxx");
+  strs[8] = strdup("yyyyy");
+
+  for (int i = 0; i < 3; ++i)
+    ASSERT_TRUE(vc_vector_push_back(vector, &strs[i]));
+  ASSERT_EQ(3, vc_vector_count(vector));
+  printf("Printing 3 strings after push_backs...");
+  PRINT_VECTOR_STR(vector);
+
+  for (int i = 3; i < 6; ++i)
+    ASSERT_TRUE(vc_vector_insert(vector, i, &strs[i]));
+  ASSERT_EQ(6, vc_vector_count(vector));
+  printf("Printing 6 strings after insertions...");
+  PRINT_VECTOR_STR(vector);
+
+  vc_vector_clear(vector); // strs[0-6] were freed
+
+  ASSERT_EQ(0, vc_vector_count(vector));
+
+  for (int i = 6; i < 9; ++i)
+    ASSERT_TRUE(vc_vector_push_back(vector, &strs[i]));
+  ASSERT_EQ(3, vc_vector_count(vector));
+  printf("Printing 3 strings after clear and insertions...");
+  PRINT_VECTOR_STR(vector);
+
+  vc_vector_release(vector);
+}
+
 void vc_vector_run_tests() {
   test_vc_vector_create();
   test_vc_vector_element_access();
   test_vc_vector_iterators();
   test_vc_vector_capacity();
   test_vc_vector_modifiers();
+  test_vc_vector_with_strfreefunc();
 }
 
 int main() {
