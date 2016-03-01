@@ -307,17 +307,9 @@ bool vc_vector_pop_back(vc_vector* vector) {
 }
 
 bool vc_vector_set(vc_vector* vector, size_t index, const void* value) {
-  if (unlikely(vector->free_func != NULL)) {
-    vector->free_func(vc_vector_at(vector, index));
-  }
-  
   return memcpy(vc_vector_at(vector, index), value, vector->element_size) != NULL;
 }
 
 bool vc_vector_set_multiple(vc_vector* vector, size_t index, const void* values, size_t count) {
-  if (unlikely(vector->free_func != NULL)) {
-    vc_vector_call_free_func(vector, index, index + count);
-  }
-  
   return memcpy(vc_vector_at(vector, index), values, vector->element_size * count) != NULL;
 }
