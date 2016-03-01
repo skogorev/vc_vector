@@ -28,6 +28,7 @@
 
 #define PRINT_VECTOR_INT(vector) PRINT_VECTOR(vector, int, "%u; ")
 #define PRINT_VECTOR_STR(vector) PRINT_VECTOR(vector, char *, "%s; ");
+
 // ----------------------------------------------------------------------------
 
 void test_vc_vector_create() {
@@ -69,6 +70,8 @@ void test_vc_vector_create() {
   ASSERT_TRUE(vc_vector_is_equals(vector, vector_copy));
   
   vc_vector_release(vector);
+  
+  printf("%s passed.\n", __PRETTY_FUNCTION__);
 }
 
 void test_vc_vector_element_access() {
@@ -91,6 +94,8 @@ void test_vc_vector_element_access() {
   }
   
   vc_vector_release(vector);
+  
+  printf("%s passed.\n", __PRETTY_FUNCTION__);
 }
 
 void test_vc_vector_iterators() {
@@ -109,6 +114,8 @@ void test_vc_vector_iterators() {
   
   ASSERT_EQ(test_count_of_elements, j);
   vc_vector_release(vector);
+  
+  printf("%s passed.\n", __PRETTY_FUNCTION__);
 }
 
 void test_vc_vector_capacity() {
@@ -141,8 +148,11 @@ void test_vc_vector_capacity() {
   ASSERT_EQ(size_of_vector_ended, vc_vector_size(vector));
   ASSERT_EQ(max_count_of_vector_ended, vc_vector_max_count(vector));
   ASSERT_EQ(max_size_of_vector_ended, vc_vector_max_size(vector));
+
+  const int test_reserve_count_fail = 10;
+  ASSERT_EQ(false, vc_vector_reserve_count(vector, test_reserve_count_fail));
   
-  const int test_reserve_count = 15;
+  const int test_reserve_count = 35;
   ASSERT_EQ(true, vc_vector_reserve_count(vector, test_reserve_count));
   ASSERT_EQ(test_reserve_count, vc_vector_max_count(vector));
   ASSERT_EQ(test_reserve_count * size_of_element, vc_vector_max_size(vector));
@@ -152,12 +162,14 @@ void test_vc_vector_capacity() {
   ASSERT_EQ(test_reserve_count, vc_vector_max_count(vector));
   ASSERT_EQ(test_reserve_count * size_of_element, vc_vector_max_size(vector));
   
-  const int test_reserve_size = 27 * size_of_element;
+  const int test_reserve_size = 123 * size_of_element;
   ASSERT_EQ(true, vc_vector_reserve_size(vector, test_reserve_size));
   ASSERT_EQ(test_reserve_size / size_of_element, vc_vector_max_count(vector));
   ASSERT_EQ(test_reserve_size, vc_vector_max_size(vector));
   
   vc_vector_release(vector);
+  
+  printf("%s passed.\n", __PRETTY_FUNCTION__);
 }
 
 void test_vc_vector_modifiers() {
@@ -252,6 +264,8 @@ void test_vc_vector_modifiers() {
   }
   
   vc_vector_release(vector);
+  
+  printf("%s passed.\n", __PRETTY_FUNCTION__);
 }
 
 void test_vc_vector_strfreefunc(void *data) {
@@ -263,40 +277,41 @@ void test_vc_vector_with_strfreefunc() {
   vc_vector* vector = vc_vector_create(3, sizeof(char *), test_vc_vector_strfreefunc);
   ASSERT_NE(NULL, vector);
 
-  char *strs[9];
-  strs[0] = strdup("abcde");
-  strs[1] = strdup("edcba");
-  strs[2] = strdup("1234554321");
-  strs[3] = strdup("!@#$%");
-  strs[4] = strdup("not empty string");
-  strs[5] = strdup("");
-  strs[6] = strdup("Hello World");
-  strs[7] = strdup("xxxxx");
-  strs[8] = strdup("yyyyy");
-
-  for (int i = 0; i < 3; ++i)
+  char *strs[] = {
+    strdup("abcde"),
+    strdup("edcba"),
+    strdup("1234554321"),
+    strdup("!@#$%"),
+    strdup("not empty string"),
+    strdup(""),
+    strdup("Hello World"),
+    strdup("xxxxx"),
+    strdup("yyyyy")
+  };
+  
+  for (int i = 0; i < 3; ++i) {
     ASSERT_TRUE(vc_vector_push_back(vector, &strs[i]));
+  }
+  
   ASSERT_EQ(3, vc_vector_count(vector));
-  printf("Printing 3 strings after push_backs...");
-  PRINT_VECTOR_STR(vector);
 
-  for (int i = 3; i < 6; ++i)
+  for (int i = 3; i < 6; ++i) {
     ASSERT_TRUE(vc_vector_insert(vector, i, &strs[i]));
+  }
+  
   ASSERT_EQ(6, vc_vector_count(vector));
-  printf("Printing 6 strings after insertions...");
-  PRINT_VECTOR_STR(vector);
-
   vc_vector_clear(vector); // strs[0-6] were freed
-
   ASSERT_EQ(0, vc_vector_count(vector));
-
-  for (int i = 6; i < 9; ++i)
+  
+  for (int i = 6; i < 9; ++i) {
     ASSERT_TRUE(vc_vector_push_back(vector, &strs[i]));
+  }
+  
   ASSERT_EQ(3, vc_vector_count(vector));
-  printf("Printing 3 strings after clear and insertions...");
-  PRINT_VECTOR_STR(vector);
 
   vc_vector_release(vector);
+  
+  printf("%s passed.\n", __PRETTY_FUNCTION__);
 }
 
 void vc_vector_run_tests() {

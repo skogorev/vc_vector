@@ -19,11 +19,11 @@
 // vc_vector structure
 
 struct vc_vector {
-  size_t element_count;
+  size_t count;
   size_t element_size;
   size_t reserved_size;
-  void* data;
-  vc_vector_free_func* free_func;
+  char* data;
+  vc_vector_deleter* deleter;
 };
 
 // ----------------------------------------------------------------------------
@@ -32,7 +32,7 @@ struct vc_vector {
 
 bool vc_vector_realloc(vc_vector* vector, size_t new_count) {
   const size_t new_size = new_count * vector->element_size;
-  void* new_data = realloc(vector->data, new_size);
+  char* new_data = (char*)realloc(vector->data, new_size);
   if (unlikely(!new_data)) {
     return false;
   }
@@ -43,27 +43,27 @@ bool vc_vector_realloc(vc_vector* vector, size_t new_count) {
 }
 
 // [first_index, last_index)
-void vc_vector_call_free_func(vc_vector* vector, size_t first_index, size_t last_index) {
+void vc_vector_call_deleter(vc_vector* vector, size_t first_index, size_t last_index) {
   for (size_t i = first_index; i < last_index; ++i) {
-    vector->free_func(vc_vector_at(vector, i));
+    vector->deleter(vc_vector_at(vector, i));
   }
 }
 
-void vc_vector_call_free_func_all(vc_vector* vector) {
-  vc_vector_call_free_func(vector, 0, vc_vector_count(vector));
+void vc_vector_call_deleter_all(vc_vector* vector) {
+  vc_vector_call_deleter(vector, 0, vc_vector_count(vector));
 }
 
 // ----------------------------------------------------------------------------
 
 // Contol
 
-vc_vector* vc_vector_create(size_t count_elements, size_t size_of_element, vc_vector_free_func* free_func) {
+vc_vector* vc_vector_create(size_t count_elements, size_t size_of_element, vc_vector_deleter* deleter) {
   vc_vector* v = (vc_vector*)malloc(sizeof(vc_vector));
   if (likely(v != NULL)) {
     v->data = NULL;
-    v->element_count = 0;
+    v->count = 0;
     v->element_size = size_of_element;
-    v->free_func = free_func;
+    v->deleter = deleter;
     
     if (unlikely(count_elements < MINIMUM_COUNT_OF_ELEMENTS)) {
       count_elements = DEFAULT_COUNT_OF_ELEMENETS;
@@ -80,25 +80,28 @@ vc_vector* vc_vector_create(size_t count_elements, size_t size_of_element, vc_ve
 }
 
 vc_vector* vc_vector_create_copy(const vc_vector* vector) {
-  vc_vector* new_vector = vc_vector_create(vector->reserved_size / vector->element_count,
+  vc_vector* new_vector = vc_vector_create(vector->reserved_size / vector->count,
                                            vector->element_size,
-                                           vector->free_func);
+                                           vector->deleter);
   if (unlikely(!new_vector)) {
     return new_vector;
   }
   
-  if (unlikely(!vc_vector_append(new_vector, vector->data, vector->element_count))) {
+  if (unlikely(memcpy(vector->data,
+                      new_vector->data,
+                      new_vector->element_size * vector->count) == NULL)) {
     vc_vector_release(new_vector);
     new_vector = NULL;
     return new_vector;
   }
   
+  new_vector->count = vector->count;
   return new_vector;
 }
 
 void vc_vector_release(vc_vector* vector) {
-  if (unlikely(vector->free_func != NULL)) {
-    vc_vector_call_free_func_all(vector);
+  if (unlikely(vector->deleter != NULL)) {
+    vc_vector_call_deleter_all(vector);
   }
   
   if (likely(vector->reserved_size != 0)) {
@@ -126,7 +129,7 @@ size_t vc_vector_get_default_count_of_elements() {
 }
 
 size_t vc_vector_struct_size() {
-  return sizeof(struct vc_vector);
+  return sizeof(vc_vector);
 }
 
 // ----------------------------------------------------------------------------
@@ -142,7 +145,7 @@ void* vc_vector_front(vc_vector* vector) {
 }
 
 void* vc_vector_back(vc_vector* vector) {
-  return vector->data + (vector->element_count - 1) * vector->element_size;
+  return vector->data + (vector->count - 1) * vector->element_size;
 }
 
 void* vc_vector_data(vc_vector* vector) {
@@ -158,7 +161,7 @@ void* vc_vector_begin(vc_vector* vector) {
 }
 
 void* vc_vector_end(vc_vector* vector) {
-  return vector->data + vector->element_size * vector->element_count;
+  return vector->data + vector->element_size * vector->count;
 }
 
 void* vc_vector_next(vc_vector* vector, void* i) {
@@ -170,15 +173,15 @@ void* vc_vector_next(vc_vector* vector, void* i) {
 // Capacity
 
 bool vc_vector_empty(vc_vector* vector) {
-  return vector->element_count == 0;
+  return vector->count == 0;
 }
 
 size_t vc_vector_count(const vc_vector* vector) {
-  return vector->element_count;
+  return vector->count;
 }
 
 size_t vc_vector_size(const vc_vector* vector) {
-  return vector->element_count * vector->element_size;
+  return vector->count * vector->element_size;
 }
 
 size_t vc_vector_max_count(const vc_vector* vector) {
@@ -195,15 +198,15 @@ bool vc_vector_reserve_count(vc_vector* vector, size_t new_count) {
     return true;
   }
   
+  if (unlikely(new_size < vector->reserved_size)) {
+    return false;
+  }
+  
   return vc_vector_realloc(vector, new_count);
 }
 
 bool vc_vector_reserve_size(vc_vector* vector, size_t new_size) {
-  if (unlikely(new_size == vector->reserved_size)) {
-    return true;
-  }
-  
-  return vc_vector_realloc(vector, new_size / vector->element_size);
+  return vc_vector_reserve_count(vector, new_size / vector->element_size);
 }
 
 // ----------------------------------------------------------------------------
@@ -211,15 +214,15 @@ bool vc_vector_reserve_size(vc_vector* vector, size_t new_size) {
 // Modifiers
 
 void vc_vector_clear(vc_vector* vector) {
-  if (unlikely(vector->free_func != NULL)) {
-    vc_vector_call_free_func_all(vector);
+  if (unlikely(vector->deleter != NULL)) {
+    vc_vector_call_deleter_all(vector);
   }
   
-  vector->element_count = 0;
+  vector->count = 0;
 }
 
 bool vc_vector_insert(vc_vector* vector, size_t index, const void* value) {
-  if (unlikely(vc_vector_max_count(vector) < vector->element_count + 1)) {
+  if (unlikely(vc_vector_max_count(vector) < vector->count + 1)) {
     if (!vc_vector_realloc(vector, vc_vector_max_count(vector) * GROWTH_FACTOR)) {
       return false;
     }
@@ -227,43 +230,48 @@ bool vc_vector_insert(vc_vector* vector, size_t index, const void* value) {
   
   if (unlikely(!memmove(vc_vector_at(vector, index + 1),
                         vc_vector_at(vector, index),
-                        vector->element_size * (vector->element_count - index)))) {
+                        vector->element_size * (vector->count - index)))) {
 
     return false;
   }
   
-  vc_vector_set(vector, index, value);
-  vector->element_count++;
+  if (unlikely(memcpy(vc_vector_at(vector, index),
+                      value,
+                      vector->element_size) == NULL)) {
+    return false;
+  }
+  
+  ++vector->count;
   return true;
 }
 
 bool vc_vector_erase(vc_vector* vector, size_t index) {
-  if (unlikely(vector->free_func != NULL)) {
-    vector->free_func(vc_vector_at(vector, index));
+  if (unlikely(vector->deleter != NULL)) {
+    vector->deleter(vc_vector_at(vector, index));
   }
   
   if (unlikely(!memmove(vc_vector_at(vector, index),
                         vc_vector_at(vector, index + 1),
-                        vector->element_size * (vector->element_count - index)))) {
+                        vector->element_size * (vector->count - index)))) {
     return false;
   }
   
-  vector->element_count--;
+  vector->count--;
   return true;
 }
 
 bool vc_vector_erase_range(vc_vector* vector, size_t first_index, size_t last_index) {
-  if (unlikely(vector->free_func != NULL)) {
-    vc_vector_call_free_func(vector, first_index, last_index);
+  if (unlikely(vector->deleter != NULL)) {
+    vc_vector_call_deleter(vector, first_index, last_index);
   }
   
   if (unlikely(!memmove(vc_vector_at(vector, first_index),
                         vc_vector_at(vector, last_index),
-                        vector->element_size * (vector->element_count - last_index)))) {
+                        vector->element_size * (vector->count - last_index)))) {
     return false;
   }
   
-  vector->element_count -= last_index - first_index;
+  vector->count -= last_index - first_index;
   return true;
 }
 
@@ -281,11 +289,13 @@ bool vc_vector_append(vc_vector* vector, const void* values, size_t count) {
     }
   }
   
-  if (unlikely(!vc_vector_set_multiple(vector, vector->element_count, values, count))) {
+  if (unlikely(memcpy(vector->data + vector->count * vector->element_size,
+                      values,
+                      vector->element_size * count) == NULL)) {
     return false;
   }
   
-  vector->element_count = count_new;
+  vector->count = count_new;
   return true;
 }
 
@@ -298,18 +308,30 @@ bool vc_vector_push_back(vc_vector* vector, const void* value) {
 }
 
 bool vc_vector_pop_back(vc_vector* vector) {
-  if (unlikely(vector->free_func != NULL)) {
-    vector->free_func(vc_vector_back(vector));
+  if (unlikely(vector->deleter != NULL)) {
+    vector->deleter(vc_vector_back(vector));
   }
   
-  vector->element_count--;
+  vector->count--;
   return true;
 }
 
-bool vc_vector_set(vc_vector* vector, size_t index, const void* value) {
-  return memcpy(vc_vector_at(vector, index), value, vector->element_size) != NULL;
+bool vc_vector_replace(vc_vector* vector, size_t index, const void* value) {
+  if (unlikely(vector->deleter != NULL)) {
+    vector->deleter(vc_vector_at(vector, index));
+  }
+  
+  return memcpy(vc_vector_at(vector, index),
+                value,
+                vector->element_size) != NULL;
 }
 
-bool vc_vector_set_multiple(vc_vector* vector, size_t index, const void* values, size_t count) {
-  return memcpy(vc_vector_at(vector, index), values, vector->element_size * count) != NULL;
+bool vc_vector_replace_multiple(vc_vector* vector, size_t index, const void* values, size_t count) {
+  if (unlikely(vector->deleter != NULL)) {
+    vc_vector_call_deleter(vector, index, index + count);
+  }
+  
+  return memcpy(vc_vector_at(vector, index),
+                values,
+                vector->element_size * count) != NULL;
 }

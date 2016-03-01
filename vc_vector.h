@@ -5,14 +5,14 @@
 #include <stdio.h>
 
 typedef struct vc_vector vc_vector;
-typedef void (vc_vector_free_func)(void *);
+typedef void (vc_vector_deleter)(void *);
 
 // ----------------------------------------------------------------------------
 // Control
 // ----------------------------------------------------------------------------
 
 // Constructs an empty vector with an reserver size for count_elements.
-vc_vector* vc_vector_create(size_t count_elements, size_t size_of_element, vc_vector_free_func* free_func);
+vc_vector* vc_vector_create(size_t count_elements, size_t size_of_element, vc_vector_deleter* deleter);
 
 // Constructs a copy of an existing vector.
 vc_vector* vc_vector_create_copy(const vc_vector* vector);
@@ -111,10 +111,10 @@ bool vc_vector_push_back(vc_vector* vector, const void* value);
 // Removes the last item in the vector.
 bool vc_vector_pop_back(vc_vector* vector);
 
-// Assign value by index in the vector.
-bool vc_vector_set(vc_vector* vector, size_t index, const void* value);
+// Replace value by index in the vector.
+bool vc_vector_replace(vc_vector* vector, size_t index, const void* value);
 
-// Assign multiple values by index in the vector.
-bool vc_vector_set_multiple(vc_vector* vector, size_t index, const void* values, size_t count);
+// Replace multiple values by index in the vector.
+bool vc_vector_replace_multiple(vc_vector* vector, size_t index, const void* values, size_t count);
 
 #endif // VCVECTOR_H
