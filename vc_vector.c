@@ -193,13 +193,13 @@ size_t vc_vector_max_size(const vc_vector* vector) {
 }
 
 bool vc_vector_reserve_count(vc_vector* vector, size_t new_count) {
+  if (unlikely(new_count < vector->count)) {
+    return false;
+  }
+
   size_t new_size = vector->element_size * new_count;
   if (unlikely(new_size == vector->reserved_size)) {
     return true;
-  }
-  
-  if (unlikely(new_size < vector->reserved_size)) {
-    return false;
   }
   
   return vc_vector_realloc(vector, new_count);
