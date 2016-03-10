@@ -69,6 +69,7 @@ void test_vc_vector_create() {
   ASSERT_NE(NULL, vector_copy);
   ASSERT_TRUE(vc_vector_is_equals(vector, vector_copy));
   
+  vc_vector_release(vector_copy);
   vc_vector_release(vector);
   
   printf("%s passed.\n", __PRETTY_FUNCTION__);
