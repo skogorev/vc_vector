@@ -2,14 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef __GNUC__
-#define likely(x)       __builtin_expect(!!(x), 1)
-#define unlikely(x)     __builtin_expect(!!(x), 0)
-#else
-#define likely(x)       (x)
-#define unlikely(x)     (x)
-#endif
-
 #define GROWTH_FACTOR 1.5
 #define DEFAULT_COUNT_OF_ELEMENETS 8
 #define MINIMUM_COUNT_OF_ELEMENTS 2
@@ -33,7 +25,7 @@ struct vc_vector {
 bool vc_vector_realloc(vc_vector* vector, size_t new_count) {
   const size_t new_size = new_count * vector->element_size;
   char* new_data = (char*)realloc(vector->data, new_size);
-  if (unlikely(!new_data)) {
+  if (!new_data) {
     return false;
   }
   
@@ -59,18 +51,18 @@ void vc_vector_call_deleter_all(vc_vector* vector) {
 
 vc_vector* vc_vector_create(size_t count_elements, size_t size_of_element, vc_vector_deleter* deleter) {
   vc_vector* v = (vc_vector*)malloc(sizeof(vc_vector));
-  if (likely(v != NULL)) {
+  if (v != NULL) {
     v->data = NULL;
     v->count = 0;
     v->element_size = size_of_element;
     v->deleter = deleter;
     
-    if (unlikely(count_elements < MINIMUM_COUNT_OF_ELEMENTS)) {
+    if (count_elements < MINIMUM_COUNT_OF_ELEMENTS) {
       count_elements = DEFAULT_COUNT_OF_ELEMENETS;
     }
     
-    if (unlikely(size_of_element < 1 ||
-                 !vc_vector_realloc(v, count_elements))) {
+    if (size_of_element < 1 ||
+                 !vc_vector_realloc(v, count_elements)) {
       free(v);
       v = NULL;
     }
@@ -83,13 +75,13 @@ vc_vector* vc_vector_create_copy(const vc_vector* vector) {
   vc_vector* new_vector = vc_vector_create(vector->reserved_size / vector->count,
                                            vector->element_size,
                                            vector->deleter);
-  if (unlikely(!new_vector)) {
+  if (!new_vector) {
     return new_vector;
   }
   
-  if (unlikely(memcpy(vector->data,
+  if (memcpy(vector->data,
                       new_vector->data,
-                      new_vector->element_size * vector->count) == NULL)) {
+                      new_vector->element_size * vector->count) == NULL) {
     vc_vector_release(new_vector);
     new_vector = NULL;
     return new_vector;
@@ -100,11 +92,11 @@ vc_vector* vc_vector_create_copy(const vc_vector* vector) {
 }
 
 void vc_vector_release(vc_vector* vector) {
-  if (unlikely(vector->deleter != NULL)) {
+  if (vector->deleter != NULL) {
     vc_vector_call_deleter_all(vector);
   }
   
-  if (likely(vector->reserved_size != 0)) {
+  if (vector->reserved_size != 0) {
     free(vector->data);
   }
   
@@ -113,7 +105,7 @@ void vc_vector_release(vc_vector* vector) {
 
 bool vc_vector_is_equals(vc_vector* vector1, vc_vector* vector2) {
   const size_t size_vector1 = vc_vector_size(vector1);
-  if (unlikely(size_vector1 != vc_vector_size(vector2))) {
+  if (size_vector1 != vc_vector_size(vector2)) {
     return false;
   }
   
@@ -193,12 +185,12 @@ size_t vc_vector_max_size(const vc_vector* vector) {
 }
 
 bool vc_vector_reserve_count(vc_vector* vector, size_t new_count) {
-  if (unlikely(new_count < vector->count)) {
+  if (new_count < vector->count) {
     return false;
   }
 
   size_t new_size = vector->element_size * new_count;
-  if (unlikely(new_size == vector->reserved_size)) {
+  if (new_size == vector->reserved_size) {
     return true;
   }
   
@@ -214,7 +206,7 @@ bool vc_vector_reserve_size(vc_vector* vector, size_t new_size) {
 // Modifiers
 
 void vc_vector_clear(vc_vector* vector) {
-  if (unlikely(vector->deleter != NULL)) {
+  if (vector->deleter != NULL) {
     vc_vector_call_deleter_all(vector);
   }
   
@@ -222,22 +214,22 @@ void vc_vector_clear(vc_vector* vector) {
 }
 
 bool vc_vector_insert(vc_vector* vector, size_t index, const void* value) {
-  if (unlikely(vc_vector_max_count(vector) < vector->count + 1)) {
+  if (vc_vector_max_count(vector) < vector->count + 1) {
     if (!vc_vector_realloc(vector, vc_vector_max_count(vector) * GROWTH_FACTOR)) {
       return false;
     }
   }
   
-  if (unlikely(!memmove(vc_vector_at(vector, index + 1),
+  if (!memmove(vc_vector_at(vector, index + 1),
                         vc_vector_at(vector, index),
-                        vector->element_size * (vector->count - index)))) {
+                        vector->element_size * (vector->count - index))) {
 
     return false;
   }
   
-  if (unlikely(memcpy(vc_vector_at(vector, index),
+  if (memcpy(vc_vector_at(vector, index),
                       value,
-                      vector->element_size) == NULL)) {
+                      vector->element_size) == NULL) {
     return false;
   }
   
@@ -246,13 +238,13 @@ bool vc_vector_insert(vc_vector* vector, size_t index, const void* value) {
 }
 
 bool vc_vector_erase(vc_vector* vector, size_t index) {
-  if (unlikely(vector->deleter != NULL)) {
+  if (vector->deleter != NULL) {
     vector->deleter(vc_vector_at(vector, index));
   }
   
-  if (unlikely(!memmove(vc_vector_at(vector, index),
+  if (!memmove(vc_vector_at(vector, index),
                         vc_vector_at(vector, index + 1),
-                        vector->element_size * (vector->count - index)))) {
+                        vector->element_size * (vector->count - index))) {
     return false;
   }
   
@@ -261,13 +253,13 @@ bool vc_vector_erase(vc_vector* vector, size_t index) {
 }
 
 bool vc_vector_erase_range(vc_vector* vector, size_t first_index, size_t last_index) {
-  if (unlikely(vector->deleter != NULL)) {
+  if (vector->deleter != NULL) {
     vc_vector_call_deleter(vector, first_index, last_index);
   }
   
-  if (unlikely(!memmove(vc_vector_at(vector, first_index),
+  if (!memmove(vc_vector_at(vector, first_index),
                         vc_vector_at(vector, last_index),
-                        vector->element_size * (vector->count - last_index)))) {
+                        vector->element_size * (vector->count - last_index))) {
     return false;
   }
   
@@ -289,9 +281,9 @@ bool vc_vector_append(vc_vector* vector, const void* values, size_t count) {
     }
   }
   
-  if (unlikely(memcpy(vector->data + vector->count * vector->element_size,
+  if (memcpy(vector->data + vector->count * vector->element_size,
                       values,
-                      vector->element_size * count) == NULL)) {
+                      vector->element_size * count) == NULL) {
     return false;
   }
   
@@ -300,7 +292,7 @@ bool vc_vector_append(vc_vector* vector, const void* values, size_t count) {
 }
 
 bool vc_vector_push_back(vc_vector* vector, const void* value) {
-  if (unlikely(!vc_vector_append(vector, value, 1))) {
+  if (!vc_vector_append(vector, value, 1)) {
     return false;
   }
   
@@ -308,7 +300,7 @@ bool vc_vector_push_back(vc_vector* vector, const void* value) {
 }
 
 bool vc_vector_pop_back(vc_vector* vector) {
-  if (unlikely(vector->deleter != NULL)) {
+  if (vector->deleter != NULL) {
     vector->deleter(vc_vector_back(vector));
   }
   
@@ -317,7 +309,7 @@ bool vc_vector_pop_back(vc_vector* vector) {
 }
 
 bool vc_vector_replace(vc_vector* vector, size_t index, const void* value) {
-  if (unlikely(vector->deleter != NULL)) {
+  if (vector->deleter != NULL) {
     vector->deleter(vc_vector_at(vector, index));
   }
   
@@ -327,7 +319,7 @@ bool vc_vector_replace(vc_vector* vector, size_t index, const void* value) {
 }
 
 bool vc_vector_replace_multiple(vc_vector* vector, size_t index, const void* values, size_t count) {
-  if (unlikely(vector->deleter != NULL)) {
+  if (vector->deleter != NULL) {
     vc_vector_call_deleter(vector, index, index + count);
   }
   
