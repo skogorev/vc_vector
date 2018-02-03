@@ -109,8 +109,10 @@ void test_vc_vector_iterators() {
   }
   
   int j = 0;
-  for (void* i = vc_vector_begin(vector); i != vc_vector_end(vector); i = vc_vector_next(vector, i)) {
-    ASSERT_EQ(j++, *(int*)i);
+  for (void* i = vc_vector_begin(vector);
+       i != vc_vector_end(vector);
+       i = vc_vector_next(vector, i), ++j) {
+    ASSERT_EQ(j, *(int*)i);
   }
   
   ASSERT_EQ(test_count_of_elements, j);
