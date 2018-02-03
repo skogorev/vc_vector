@@ -4,31 +4,42 @@
 #include <inttypes.h>
 #include "vc_vector.h"
 
-#define ASSERT_EQ(expected, actual) if ((expected) != (actual)) { \
-                                      printf("Failed passing line %u. Expected: %u. Actual: %u.\n", \
-                                             __LINE__, (int)(expected), (int)(actual)); \
-                                      abort(); \
-                                    }
+#define ASSERT_EQ(expected, actual)                          \
+  do {                                                       \
+    if ((expected) != (actual)) {                            \
+      fprintf(stderr,                                        \
+              "Failed line %u. Expected: %u. Actual: %u.\n", \
+              __LINE__, (int)(expected), (int)(actual));     \
+      abort();                                               \
+    }                                                        \
+  } while (0)
 
-#define ASSERT_NE(not_expected, actual) if ((not_expected) == (actual)) { \
-                                          printf("Failed passing line %u. Non expected actual value: %u.\n", \
-                                                 __LINE__, (int)(actual)); \
-                                          abort(); \
-                                        }
+#define ASSERT_NE(not_expected, actual)                         \
+  do {                                                          \
+    if ((not_expected) == (actual)) {                           \
+      fprintf(stderr,                                           \
+              "Failed line %u. Unexpected actual value: %u.\n", \
+             __LINE__, (int)(actual));                          \
+      abort();                                                  \
+    }                                                           \
+  } while (0)
 
-#define ASSERT_TRUE(actual) ASSERT_EQ(true, (actual));
+#define ASSERT_TRUE(actual) ASSERT_EQ(true, (actual))
 
-#define ASSERT_FALSE(actual) ASSERT_EQ(false, (actual));
+#define ASSERT_FALSE(actual) ASSERT_EQ(false, (actual))
 
-#define PRINT_VECTOR(vector, type, format) for (void* i = vc_vector_begin(vector); \
-                                                      i != vc_vector_end(vector); \
-                                                      i = vc_vector_next(vector, i)) { \
-                                                  printf(format, *(type*)i); \
-                                           } \
-                                           printf("\n");
+#define PRINT_VECTOR(vector, type, format)   \
+  do {                                       \
+    for (void* i = vc_vector_begin(vector);  \
+         i != vc_vector_end(vector);         \
+         i = vc_vector_next(vector, i)) {    \
+      fprintf(stderr, format, *(type*)i);    \
+    }                                        \
+    fprintf(stderr, "\n");                   \
+  } while (0)
 
 #define PRINT_VECTOR_INT(vector) PRINT_VECTOR(vector, int, "%u; ")
-#define PRINT_VECTOR_STR(vector) PRINT_VECTOR(vector, char *, "%s; ");
+#define PRINT_VECTOR_STR(vector) PRINT_VECTOR(vector, char *, "%s; ")
 
 // ----------------------------------------------------------------------------
 
