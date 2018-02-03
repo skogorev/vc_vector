@@ -84,7 +84,7 @@ void test_vc_vector_create() {
   vc_vector_release(vector_copy);
   vc_vector_release(vector);
 
-  printf("%s passed.\n", __PRETTY_FUNCTION__);
+  printf("%s passed.\n", __func__);
 }
 
 void test_vc_vector_element_access() {
@@ -108,7 +108,7 @@ void test_vc_vector_element_access() {
 
   vc_vector_release(vector);
 
-  printf("%s passed.\n", __PRETTY_FUNCTION__);
+  printf("%s passed.\n", __func__);
 }
 
 void test_vc_vector_iterators() {
@@ -130,7 +130,7 @@ void test_vc_vector_iterators() {
   ASSERT_EQ(test_count_of_elements, (size_t)j);
   vc_vector_release(vector);
 
-  printf("%s passed.\n", __PRETTY_FUNCTION__);
+  printf("%s passed.\n", __func__);
 }
 
 void test_vc_vector_capacity() {
@@ -184,7 +184,7 @@ void test_vc_vector_capacity() {
 
   vc_vector_release(vector);
 
-  printf("%s passed.\n", __PRETTY_FUNCTION__);
+  printf("%s passed.\n", __func__);
 }
 
 void test_vc_vector_modifiers() {
@@ -280,7 +280,7 @@ void test_vc_vector_modifiers() {
 
   vc_vector_release(vector);
 
-  printf("%s passed.\n", __PRETTY_FUNCTION__);
+  printf("%s passed.\n", __func__);
 }
 
 void test_vc_vector_strfreefunc(void *data) {
@@ -326,7 +326,7 @@ void test_vc_vector_with_strfreefunc() {
 
   vc_vector_release(vector);
 
-  printf("%s passed.\n", __PRETTY_FUNCTION__);
+  printf("%s passed.\n", __func__);
 }
 
 void vc_vector_run_tests() {
