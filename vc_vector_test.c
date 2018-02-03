@@ -1,6 +1,7 @@
 #include "vc_vector_test.h"
 #include <stdlib.h>
 #include <string.h>
+#include <inttypes.h>
 #include "vc_vector.h"
 
 #define ASSERT_EQ(expected, actual) if ((expected) != (actual)) { \
@@ -61,7 +62,7 @@ void test_vc_vector_create() {
   // Creating copy of vector
   vector = vc_vector_create(0, size_of_type, NULL);
   ASSERT_NE(NULL, vector);
-  for (int i = 0; i < test_count_of_elements; ++i) {
+  for (int i = 0; (size_t)i < test_count_of_elements; ++i) {
     ASSERT_TRUE(vc_vector_push_back(vector, &i));
   }
   
@@ -103,8 +104,8 @@ void test_vc_vector_iterators() {
   vc_vector* vector = vc_vector_create(0, sizeof(int), NULL);
   ASSERT_NE(NULL, vector);
   
-  const int test_count_of_elements = 23;
-  for (int i = 0; i < test_count_of_elements; ++i) {
+  const size_t test_count_of_elements = 23;
+  for (int i = 0; (size_t)i < test_count_of_elements; ++i) {
     ASSERT_EQ(true, vc_vector_push_back(vector, &i));
   }
   
@@ -115,23 +116,23 @@ void test_vc_vector_iterators() {
     ASSERT_EQ(j, *(int*)i);
   }
   
-  ASSERT_EQ(test_count_of_elements, j);
+  ASSERT_EQ(test_count_of_elements, (size_t)j);
   vc_vector_release(vector);
   
   printf("%s passed.\n", __PRETTY_FUNCTION__);
 }
 
 void test_vc_vector_capacity() {
-  const int size_of_element = sizeof(int);
+  const size_t size_of_element = sizeof(int);
   const float growth_factor = vc_vector_get_growth_factor();
   ASSERT_EQ(1.5, growth_factor);
   
-  const int count_of_elements_initialized = 22;
-  const int max_size_of_vector_initialized = count_of_elements_initialized * size_of_element;
-  const int count_of_elements_ended = 23;
-  const int size_of_vector_ended = count_of_elements_ended * size_of_element;
-  const int max_count_of_vector_ended = count_of_elements_initialized * growth_factor;
-  const int max_size_of_vector_ended = max_count_of_vector_ended * size_of_element;
+  const size_t count_of_elements_initialized = 22;
+  const size_t max_size_of_vector_initialized = count_of_elements_initialized * size_of_element;
+  const size_t count_of_elements_ended = 23;
+  const size_t size_of_vector_ended = count_of_elements_ended * size_of_element;
+  const size_t max_count_of_vector_ended = count_of_elements_initialized * growth_factor;
+  const size_t max_size_of_vector_ended = max_count_of_vector_ended * size_of_element;
   
   vc_vector* vector = vc_vector_create(count_of_elements_initialized, size_of_element, NULL);
   ASSERT_NE(NULL, vector);
@@ -142,7 +143,7 @@ void test_vc_vector_capacity() {
   ASSERT_EQ(count_of_elements_initialized, vc_vector_max_count(vector));
   ASSERT_EQ(max_size_of_vector_initialized, vc_vector_max_size(vector));
   
-  for (int i = 0; i < count_of_elements_ended; ++i) {
+  for (int i = 0; (size_t)i < count_of_elements_ended; ++i) {
     ASSERT_EQ(true, vc_vector_push_back(vector, &i));
   }
   
@@ -152,10 +153,10 @@ void test_vc_vector_capacity() {
   ASSERT_EQ(max_count_of_vector_ended, vc_vector_max_count(vector));
   ASSERT_EQ(max_size_of_vector_ended, vc_vector_max_size(vector));
 
-  const int test_reserve_count_fail = 10;
+  const size_t test_reserve_count_fail = 10;
   ASSERT_EQ(false, vc_vector_reserve_count(vector, test_reserve_count_fail));
   
-  const int test_reserve_count = 35;
+  const size_t test_reserve_count = 35;
   ASSERT_EQ(true, vc_vector_reserve_count(vector, test_reserve_count));
   ASSERT_EQ(test_reserve_count, vc_vector_max_count(vector));
   ASSERT_EQ(test_reserve_count * size_of_element, vc_vector_max_size(vector));
@@ -165,7 +166,7 @@ void test_vc_vector_capacity() {
   ASSERT_EQ(test_reserve_count, vc_vector_max_count(vector));
   ASSERT_EQ(test_reserve_count * size_of_element, vc_vector_max_size(vector));
   
-  const int test_reserve_size = 123 * size_of_element;
+  const size_t test_reserve_size = 123 * size_of_element;
   ASSERT_EQ(true, vc_vector_reserve_size(vector, test_reserve_size));
   ASSERT_EQ(test_reserve_size / size_of_element, vc_vector_max_count(vector));
   ASSERT_EQ(test_reserve_size, vc_vector_max_size(vector));
@@ -179,8 +180,8 @@ void test_vc_vector_modifiers() {
   const int begin[] = {
     1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20
   };
-  const int size_of_element = sizeof(begin[0]);
-  const int count_of_elements = sizeof(begin) / size_of_element;
+  const size_t size_of_element = sizeof(begin[0]);
+  const size_t count_of_elements = sizeof(begin) / size_of_element;
   
   // After deleting first, last and one middle elements
   const int after_deleting_some_elements[] = {
@@ -200,7 +201,7 @@ void test_vc_vector_modifiers() {
   ASSERT_EQ(true, vc_vector_append(vector, (void*)begin, count_of_elements));
   
   ASSERT_EQ(count_of_elements, vc_vector_count(vector));
-  for (int i = 0; i < vc_vector_count(vector); ++i) {
+  for (int i = 0; (size_t)i < vc_vector_count(vector); ++i) {
     ASSERT_EQ(begin[i], *(int*)vc_vector_at(vector, i));
   }
   
@@ -214,12 +215,12 @@ void test_vc_vector_modifiers() {
   
   // Push back test
   
-  for (int i = 0; i < count_of_elements; ++i) {
+  for (int i = 0; (size_t)i < count_of_elements; ++i) {
     ASSERT_EQ(true, vc_vector_push_back(vector, (void*)&begin[i]));
   }
   
   ASSERT_EQ(count_of_elements, vc_vector_count(vector));
-  for (int i = 0; i < vc_vector_count(vector); ++i) {
+  for (int i = 0; (size_t)i < vc_vector_count(vector); ++i) {
     ASSERT_EQ(begin[i], *(int*)vc_vector_at(vector, i));
   }
   
@@ -233,7 +234,7 @@ void test_vc_vector_modifiers() {
   ASSERT_EQ(true, vc_vector_erase(vector, vc_vector_count(vector) / 2));
   
   ASSERT_EQ(sizeof(after_deleting_some_elements) / size_of_element, vc_vector_count(vector));
-  for (int i = 0; i < vc_vector_count(vector); ++i) {
+  for (size_t i = 0; i < vc_vector_count(vector); ++i) {
     ASSERT_EQ(after_deleting_some_elements[i], *(int*)vc_vector_at(vector, i));
   }
   
@@ -247,14 +248,14 @@ void test_vc_vector_modifiers() {
   ASSERT_EQ(true, vc_vector_erase_range(vector, vc_vector_count(vector) / 2 - 2, vc_vector_count(vector) / 2 + 2));
   
   ASSERT_EQ(sizeof(after_deleting_some_ranges) / size_of_element, vc_vector_count(vector));
-  for (int i = 0; i < vc_vector_count(vector); ++i) {
+  for (size_t i = 0; i < vc_vector_count(vector); ++i) {
     ASSERT_EQ(after_deleting_some_ranges[i], *(int*)vc_vector_at(vector, i));
   }
   
   // Insert test
   
   vc_vector_clear(vector);
-  for (int i = 1; i < count_of_elements - 1; ++i) {
+  for (size_t i = 1; i < count_of_elements - 1; ++i) {
     ASSERT_EQ(true, vc_vector_insert(vector, i - 1, (void*)&begin[i]));
   }
   
@@ -262,7 +263,7 @@ void test_vc_vector_modifiers() {
   ASSERT_EQ(true, vc_vector_insert(vector, vc_vector_count(vector), &begin[count_of_elements - 1]));
   
   ASSERT_EQ(count_of_elements, vc_vector_count(vector));
-  for (int i = 0; i < vc_vector_count(vector); ++i) {
+  for (size_t i = 0; i < vc_vector_count(vector); ++i) {
     ASSERT_EQ(begin[i], *(int*)vc_vector_at(vector, i));
   }
   
@@ -292,13 +293,13 @@ void test_vc_vector_with_strfreefunc() {
     strdup("yyyyy")
   };
   
-  for (int i = 0; i < 3; ++i) {
+  for (size_t i = 0; i < 3; ++i) {
     ASSERT_TRUE(vc_vector_push_back(vector, &strs[i]));
   }
   
   ASSERT_EQ(3, vc_vector_count(vector));
 
-  for (int i = 3; i < 6; ++i) {
+  for (size_t i = 3; i < 6; ++i) {
     ASSERT_TRUE(vc_vector_insert(vector, i, &strs[i]));
   }
   
@@ -306,7 +307,7 @@ void test_vc_vector_with_strfreefunc() {
   vc_vector_clear(vector); // strs[0-6] were freed
   ASSERT_EQ(0, vc_vector_count(vector));
   
-  for (int i = 6; i < 9; ++i) {
+  for (size_t i = 6; i < 9; ++i) {
     ASSERT_TRUE(vc_vector_push_back(vector, &strs[i]));
   }
   
