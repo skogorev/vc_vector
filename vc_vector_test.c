@@ -117,7 +117,7 @@ void test_vc_vector_iterators() {
   
   const size_t test_count_of_elements = 23;
   for (int i = 0; (size_t)i < test_count_of_elements; ++i) {
-    ASSERT_EQ(true, vc_vector_push_back(vector, &i));
+    ASSERT_TRUE(vc_vector_push_back(vector, &i));
   }
   
   int j = 0;
@@ -149,36 +149,37 @@ void test_vc_vector_capacity() {
   ASSERT_NE(NULL, vector);
   
   ASSERT_EQ(0, vc_vector_count(vector));
-  ASSERT_EQ(true, vc_vector_empty(vector));
+  ASSERT_TRUE(vc_vector_empty(vector));
   ASSERT_EQ(0, vc_vector_size(vector));
   ASSERT_EQ(count_of_elements_initialized, vc_vector_max_count(vector));
   ASSERT_EQ(max_size_of_vector_initialized, vc_vector_max_size(vector));
   
   for (int i = 0; (size_t)i < count_of_elements_ended; ++i) {
-    ASSERT_EQ(true, vc_vector_push_back(vector, &i));
+    ASSERT_TRUE(vc_vector_push_back(vector, &i));
   }
   
   ASSERT_EQ(count_of_elements_ended, vc_vector_count(vector));
-  ASSERT_EQ(false, vc_vector_empty(vector));
+  ASSERT_FALSE(vc_vector_empty(vector));
   ASSERT_EQ(size_of_vector_ended, vc_vector_size(vector));
   ASSERT_EQ(max_count_of_vector_ended, vc_vector_max_count(vector));
   ASSERT_EQ(max_size_of_vector_ended, vc_vector_max_size(vector));
 
   const size_t test_reserve_count_fail = 10;
-  ASSERT_EQ(false, vc_vector_reserve_count(vector, test_reserve_count_fail));
+  ASSERT_FALSE(vc_vector_reserve_count(vector, test_reserve_count_fail));
   
+
   const size_t test_reserve_count = 35;
-  ASSERT_EQ(true, vc_vector_reserve_count(vector, test_reserve_count));
+  ASSERT_TRUE(vc_vector_reserve_count(vector, test_reserve_count));
   ASSERT_EQ(test_reserve_count, vc_vector_max_count(vector));
   ASSERT_EQ(test_reserve_count * size_of_element, vc_vector_max_size(vector));
   
   // Second time with the same value
-  ASSERT_EQ(true, vc_vector_reserve_count(vector, test_reserve_count));
+  ASSERT_TRUE(vc_vector_reserve_count(vector, test_reserve_count));
   ASSERT_EQ(test_reserve_count, vc_vector_max_count(vector));
   ASSERT_EQ(test_reserve_count * size_of_element, vc_vector_max_size(vector));
   
   const size_t test_reserve_size = 123 * size_of_element;
-  ASSERT_EQ(true, vc_vector_reserve_size(vector, test_reserve_size));
+  ASSERT_TRUE(vc_vector_reserve_size(vector, test_reserve_size));
   ASSERT_EQ(test_reserve_size / size_of_element, vc_vector_max_count(vector));
   ASSERT_EQ(test_reserve_size, vc_vector_max_size(vector));
   
@@ -209,7 +210,7 @@ void test_vc_vector_modifiers() {
   
   // Append test
   
-  ASSERT_EQ(true, vc_vector_append(vector, (void*)begin, count_of_elements));
+  ASSERT_TRUE(vc_vector_append(vector, (void*)begin, count_of_elements));
   
   ASSERT_EQ(count_of_elements, vc_vector_count(vector));
   for (int i = 0; (size_t)i < vc_vector_count(vector); ++i) {
@@ -219,15 +220,15 @@ void test_vc_vector_modifiers() {
   // Pop back test
   
   while (vc_vector_count(vector) > 0) {
-    ASSERT_EQ(true, vc_vector_pop_back(vector));
+    ASSERT_TRUE(vc_vector_pop_back(vector));
   }
   
-  ASSERT_EQ(true, vc_vector_empty(vector));
+  ASSERT_TRUE(vc_vector_empty(vector));
   
   // Push back test
   
   for (int i = 0; (size_t)i < count_of_elements; ++i) {
-    ASSERT_EQ(true, vc_vector_push_back(vector, (void*)&begin[i]));
+    ASSERT_TRUE(vc_vector_push_back(vector, (void*)&begin[i]));
   }
   
   ASSERT_EQ(count_of_elements, vc_vector_count(vector));
@@ -238,11 +239,11 @@ void test_vc_vector_modifiers() {
   // Erase test
   
   vc_vector_clear(vector);
-  ASSERT_EQ(true, vc_vector_append(vector, (void*)begin, count_of_elements));
+  ASSERT_TRUE(vc_vector_append(vector, (void*)begin, count_of_elements));
   
-  ASSERT_EQ(true, vc_vector_erase(vector, 0));
-  ASSERT_EQ(true, vc_vector_erase(vector, vc_vector_count(vector) - 1));
-  ASSERT_EQ(true, vc_vector_erase(vector, vc_vector_count(vector) / 2));
+  ASSERT_TRUE(vc_vector_erase(vector, 0));
+  ASSERT_TRUE(vc_vector_erase(vector, vc_vector_count(vector) - 1));
+  ASSERT_TRUE(vc_vector_erase(vector, vc_vector_count(vector) / 2));
   
   ASSERT_EQ(sizeof(after_deleting_some_elements) / size_of_element, vc_vector_count(vector));
   for (size_t i = 0; i < vc_vector_count(vector); ++i) {
@@ -252,11 +253,11 @@ void test_vc_vector_modifiers() {
   // Erase range test
   
   vc_vector_clear(vector);
-  ASSERT_EQ(true, vc_vector_append(vector, (void*)begin, count_of_elements));
+  ASSERT_TRUE(vc_vector_append(vector, (void*)begin, count_of_elements));
   
-  ASSERT_EQ(true, vc_vector_erase_range(vector, 0, 3));
-  ASSERT_EQ(true, vc_vector_erase_range(vector, vc_vector_count(vector) - 3, vc_vector_count(vector)));
-  ASSERT_EQ(true, vc_vector_erase_range(vector, vc_vector_count(vector) / 2 - 2, vc_vector_count(vector) / 2 + 2));
+  ASSERT_TRUE(vc_vector_erase_range(vector, 0, 3));
+  ASSERT_TRUE(vc_vector_erase_range(vector, vc_vector_count(vector) - 3, vc_vector_count(vector)));
+  ASSERT_TRUE(vc_vector_erase_range(vector, vc_vector_count(vector) / 2 - 2, vc_vector_count(vector) / 2 + 2));
   
   ASSERT_EQ(sizeof(after_deleting_some_ranges) / size_of_element, vc_vector_count(vector));
   for (size_t i = 0; i < vc_vector_count(vector); ++i) {
@@ -267,11 +268,11 @@ void test_vc_vector_modifiers() {
   
   vc_vector_clear(vector);
   for (size_t i = 1; i < count_of_elements - 1; ++i) {
-    ASSERT_EQ(true, vc_vector_insert(vector, i - 1, (void*)&begin[i]));
+    ASSERT_TRUE(vc_vector_insert(vector, i - 1, (void*)&begin[i]));
   }
   
-  ASSERT_EQ(true, vc_vector_insert(vector, 0, &begin[0]));
-  ASSERT_EQ(true, vc_vector_insert(vector, vc_vector_count(vector), &begin[count_of_elements - 1]));
+  ASSERT_TRUE(vc_vector_insert(vector, 0, &begin[0]));
+  ASSERT_TRUE(vc_vector_insert(vector, vc_vector_count(vector), &begin[count_of_elements - 1]));
   
   ASSERT_EQ(count_of_elements, vc_vector_count(vector));
   for (size_t i = 0; i < vc_vector_count(vector); ++i) {
