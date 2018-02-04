@@ -38,7 +38,7 @@
     fprintf(stderr, "\n");                   \
   } while (0)
 
-#define PRINT_VECTOR_INT(vector) PRINT_VECTOR(vector, int, "%u; ")
+#define PRINT_VECTOR_INT(vector) PRINT_VECTOR(vector, int, "%d; ")
 #define PRINT_VECTOR_STR(vector) PRINT_VECTOR(vector, char *, "%s; ")
 
 // ----------------------------------------------------------------------------
