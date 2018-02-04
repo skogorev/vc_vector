@@ -4,24 +4,24 @@
 #include <inttypes.h>
 #include "vc_vector.h"
 
-#define ASSERT_EQ(expected, actual)                          \
-  do {                                                       \
-    if ((expected) != (actual)) {                            \
-      fprintf(stderr,                                        \
-              "Failed line %u. Expected: %u. Actual: %u.\n", \
-              __LINE__, (int)(expected), (int)(actual));     \
-      abort();                                               \
-    }                                                        \
+#define ASSERT_EQ(expected, actual)                                          \
+  do {                                                                       \
+    if ((expected) != (actual)) {                                            \
+      fprintf(stderr,                                                        \
+              "Failed line %u. Expected: %"PRIuMAX". Actual: %"PRIuMAX".\n", \
+              __LINE__, (uintmax_t)(expected), (uintmax_t)(actual));         \
+      abort();                                                               \
+    }                                                                        \
   } while (0)
 
-#define ASSERT_NE(not_expected, actual)                         \
-  do {                                                          \
-    if ((not_expected) == (actual)) {                           \
-      fprintf(stderr,                                           \
-              "Failed line %u. Unexpected actual value: %u.\n", \
-             __LINE__, (int)(actual));                          \
-      abort();                                                  \
-    }                                                           \
+#define ASSERT_NE(not_expected, actual)                                 \
+  do {                                                                  \
+    if ((not_expected) == (actual)) {                                   \
+      fprintf(stderr,                                                   \
+              "Failed line %u. Unexpected actual value: %"PRIuMAX".\n", \
+             __LINE__, (uintmax_t)(actual));                            \
+      abort();                                                          \
+    }                                                                   \
   } while (0)
 
 #define ASSERT_TRUE(actual) ASSERT_EQ(true, (actual))
