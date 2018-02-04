@@ -209,10 +209,10 @@ void test_vc_vector_modifiers() {
 
   // Append test
 
-  ASSERT_TRUE(vc_vector_append(vector, (void*)begin, count_of_elements));
+  ASSERT_TRUE(vc_vector_append(vector, begin, count_of_elements));
 
   ASSERT_EQ(count_of_elements, vc_vector_count(vector));
-  for (int i = 0; (size_t)i < vc_vector_count(vector); ++i) {
+  for (size_t i = 0; i < vc_vector_count(vector); ++i) {
     ASSERT_EQ(begin[i], *(int*)vc_vector_at(vector, i));
   }
 
@@ -226,19 +226,19 @@ void test_vc_vector_modifiers() {
 
   // Push back test
 
-  for (int i = 0; (size_t)i < count_of_elements; ++i) {
-    ASSERT_TRUE(vc_vector_push_back(vector, (void*)&begin[i]));
+  for (size_t i = 0; i < count_of_elements; ++i) {
+    ASSERT_TRUE(vc_vector_push_back(vector, &begin[i]));
   }
 
   ASSERT_EQ(count_of_elements, vc_vector_count(vector));
-  for (int i = 0; (size_t)i < vc_vector_count(vector); ++i) {
+  for (size_t i = 0; i < vc_vector_count(vector); ++i) {
     ASSERT_EQ(begin[i], *(int*)vc_vector_at(vector, i));
   }
 
   // Erase test
 
   vc_vector_clear(vector);
-  ASSERT_TRUE(vc_vector_append(vector, (void*)begin, count_of_elements));
+  ASSERT_TRUE(vc_vector_append(vector, begin, count_of_elements));
 
   ASSERT_TRUE(vc_vector_erase(vector, 0));
   ASSERT_TRUE(vc_vector_erase(vector, vc_vector_count(vector) - 1));
@@ -252,7 +252,7 @@ void test_vc_vector_modifiers() {
   // Erase range test
 
   vc_vector_clear(vector);
-  ASSERT_TRUE(vc_vector_append(vector, (void*)begin, count_of_elements));
+  ASSERT_TRUE(vc_vector_append(vector, begin, count_of_elements));
 
   ASSERT_TRUE(vc_vector_erase_range(vector, 0, 3));
   ASSERT_TRUE(vc_vector_erase_range(vector, vc_vector_count(vector) - 3, vc_vector_count(vector)));
@@ -267,7 +267,7 @@ void test_vc_vector_modifiers() {
 
   vc_vector_clear(vector);
   for (size_t i = 1; i < count_of_elements - 1; ++i) {
-    ASSERT_TRUE(vc_vector_insert(vector, i - 1, (void*)&begin[i]));
+    ASSERT_TRUE(vc_vector_insert(vector, i - 1, &begin[i]));
   }
 
   ASSERT_TRUE(vc_vector_insert(vector, 0, &begin[0]));
