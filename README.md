@@ -5,7 +5,7 @@ Fast simple C vector implementation
 
 ## Usage
 
-###Basic
+### Basic
 ```c
 #include "vc_vector.h"
 
@@ -36,7 +36,7 @@ int main() {
 }
 ```
 
-###Advanced
+### Advanced
 ```c
 #include "vc_vector.h"
 
