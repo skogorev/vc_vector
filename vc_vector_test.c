@@ -41,6 +41,14 @@
 #define PRINT_VECTOR_INT(vector) PRINT_VECTOR(vector, int, "%d; ")
 #define PRINT_VECTOR_STR(vector) PRINT_VECTOR(vector, char *, "%s; ")
 
+char *mystrdup(const char *s) {
+  size_t size = strlen(s) + 1;
+  char *copy = malloc(size);
+  if (copy != NULL)
+    memcpy(copy, s, size);
+  return copy;
+}
+
 // ----------------------------------------------------------------------------
 
 void test_vc_vector_create() {
@@ -293,15 +301,15 @@ void test_vc_vector_with_strfreefunc() {
   ASSERT_NE(NULL, vector);
 
   char *strs[] = {
-    strdup("abcde"),
-    strdup("edcba"),
-    strdup("1234554321"),
-    strdup("!@#$%"),
-    strdup("not empty string"),
-    strdup(""),
-    strdup("Hello World"),
-    strdup("xxxxx"),
-    strdup("yyyyy")
+    mystrdup("abcde"),
+    mystrdup("edcba"),
+    mystrdup("1234554321"),
+    mystrdup("!@#$%"),
+    mystrdup("not empty string"),
+    mystrdup(""),
+    mystrdup("Hello World"),
+    mystrdup("xxxxx"),
+    mystrdup("yyyyy")
   };
 
   for (size_t i = 0; i < 3; ++i) {
