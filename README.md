@@ -1,7 +1,7 @@
 # vc_vector
 Fast simple C vector implementation
 
-[![Build Status: gcc -std=gnu99](https://travis-ci.org/skogorev/vc_vector.svg)](https://travis-ci.org/skogorev/vc_vector)
+[![Build Status: make && make test](https://travis-ci.org/skogorev/vc_vector.svg)](https://travis-ci.org/skogorev/vc_vector)
 
 ## Usage
 
