@@ -6,7 +6,7 @@ Fast simple C vector implementation
 ## Usage
 
 ###Basic
-```
+```c
 #include "vc_vector.h"
 
 int main() {
@@ -37,7 +37,7 @@ int main() {
 ```
 
 ###Advanced
-```
+```c
 #include "vc_vector.h"
 
 struct Item {
