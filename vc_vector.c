@@ -3,7 +3,7 @@
 #include <string.h>
 
 #define GROWTH_FACTOR 1.5
-#define DEFAULT_COUNT_OF_ELEMENETS 8
+#define DEFAULT_COUNT_OF_ELEMENTS 8
 #define MINIMUM_COUNT_OF_ELEMENTS 2
 
 // ----------------------------------------------------------------------------
@@ -20,7 +20,7 @@ struct vc_vector {
 
 // ----------------------------------------------------------------------------
 
-// auxillary methods
+// Auxiliary methods
 
 bool vc_vector_realloc(vc_vector* vector, size_t new_count) {
   const size_t new_size = new_count * vector->element_size;
@@ -47,7 +47,7 @@ void vc_vector_call_deleter_all(vc_vector* vector) {
 
 // ----------------------------------------------------------------------------
 
-// Contol
+// Control
 
 vc_vector* vc_vector_create(size_t count_elements, size_t size_of_element, vc_vector_deleter* deleter) {
   vc_vector* v = (vc_vector*)malloc(sizeof(vc_vector));
@@ -58,7 +58,7 @@ vc_vector* vc_vector_create(size_t count_elements, size_t size_of_element, vc_ve
     v->deleter = deleter;
 
     if (count_elements < MINIMUM_COUNT_OF_ELEMENTS) {
-      count_elements = DEFAULT_COUNT_OF_ELEMENETS;
+      count_elements = DEFAULT_COUNT_OF_ELEMENTS;
     }
 
     if (size_of_element < 1 ||
@@ -117,7 +117,7 @@ float vc_vector_get_growth_factor() {
 }
 
 size_t vc_vector_get_default_count_of_elements() {
-  return DEFAULT_COUNT_OF_ELEMENETS;
+  return DEFAULT_COUNT_OF_ELEMENTS;
 }
 
 size_t vc_vector_struct_size() {
