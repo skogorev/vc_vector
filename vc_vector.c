@@ -157,7 +157,7 @@ void* vc_vector_end(vc_vector* vector) {
 }
 
 void* vc_vector_next(vc_vector* vector, void* i) {
-  return i + vector->element_size;
+  return (void*)((size_t)i+vector->element_size);
 }
 
 // ----------------------------------------------------------------------------
