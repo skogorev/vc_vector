@@ -1,6 +1,7 @@
 #include "vc_vector.h"
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 #define GROWTH_FACTOR 1.5
 #define DEFAULT_COUNT_OF_ELEMENTS 8
@@ -22,7 +23,12 @@ struct vc_vector {
 
 // Auxiliary methods
 
-bool vc_vector_realloc(vc_vector* vector, size_t new_count) {
+static bool vc_vector_realloc(vc_vector* vector, size_t new_count) {
+  if (!vector || new_count == 0 || vector->element_size == 0 ||
+      new_count > SIZE_MAX / vector->element_size) {
+    return false;
+  }
+
   const size_t new_size = new_count * vector->element_size;
   char* new_data = (char*)realloc(vector->data, new_size);
   if (!new_data) {
@@ -35,13 +41,13 @@ bool vc_vector_realloc(vc_vector* vector, size_t new_count) {
 }
 
 // [first_index, last_index)
-void vc_vector_call_deleter(vc_vector* vector, size_t first_index, size_t last_index) {
+static void vc_vector_call_deleter(vc_vector* vector, size_t first_index, size_t last_index) {
   for (size_t i = first_index; i < last_index; ++i) {
     vector->deleter(vc_vector_at(vector, i));
   }
 }
 
-void vc_vector_call_deleter_all(vc_vector* vector) {
+static void vc_vector_call_deleter_all(vc_vector* vector) {
   vc_vector_call_deleter(vector, 0, vc_vector_count(vector));
 }
 
@@ -50,19 +56,23 @@ void vc_vector_call_deleter_all(vc_vector* vector) {
 // Control
 
 vc_vector* vc_vector_create(size_t count_elements, size_t size_of_element, vc_vector_deleter* deleter) {
+  if (size_of_element == 0) {
+    return NULL;
+  }
+
+  if (count_elements < MINIMUM_COUNT_OF_ELEMENTS) {
+    count_elements = DEFAULT_COUNT_OF_ELEMENTS;
+  }
+
   vc_vector* v = (vc_vector*)malloc(sizeof(vc_vector));
   if (v != NULL) {
     v->data = NULL;
     v->count = 0;
     v->element_size = size_of_element;
+    v->reserved_size = 0;
     v->deleter = deleter;
 
-    if (count_elements < MINIMUM_COUNT_OF_ELEMENTS) {
-      count_elements = DEFAULT_COUNT_OF_ELEMENTS;
-    }
-
-    if (size_of_element < 1 ||
-                 !vc_vector_realloc(v, count_elements)) {
+    if (!vc_vector_realloc(v, count_elements)) {
       free(v);
       v = NULL;
     }
@@ -72,19 +82,21 @@ vc_vector* vc_vector_create(size_t count_elements, size_t size_of_element, vc_ve
 }
 
 vc_vector* vc_vector_create_copy(const vc_vector* vector) {
-  vc_vector* new_vector = vc_vector_create(vector->reserved_size / vector->count,
+  if (!vector) {
+    return NULL;
+  }
+
+  vc_vector* new_vector = vc_vector_create(vc_vector_max_count(vector),
                                            vector->element_size,
                                            vector->deleter);
   if (!new_vector) {
-    return new_vector;
+    return NULL;
   }
 
-  if (memcpy(vector->data,
-                      new_vector->data,
-                      new_vector->element_size * vector->count) == NULL) {
-    vc_vector_release(new_vector);
-    new_vector = NULL;
-    return new_vector;
+  if (vector->count > 0) {
+    memcpy(new_vector->data,
+           vector->data,
+           new_vector->element_size * vector->count);
   }
 
   new_vector->count = vector->count;
@@ -92,21 +104,30 @@ vc_vector* vc_vector_create_copy(const vc_vector* vector) {
 }
 
 void vc_vector_release(vc_vector* vector) {
+  if (!vector) {
+    return;
+  }
+
   if (vector->deleter != NULL) {
     vc_vector_call_deleter_all(vector);
   }
 
-  if (vector->reserved_size != 0) {
-    free(vector->data);
-  }
-
+  free(vector->data);
   free(vector);
 }
 
-bool vc_vector_is_equals(vc_vector* vector1, vc_vector* vector2) {
-  const size_t size_vector1 = vc_vector_size(vector1);
-  if (size_vector1 != vc_vector_size(vector2)) {
+bool vc_vector_is_equals(const vc_vector* vector1, const vc_vector* vector2) {
+  if (!vector1 || !vector2) {
     return false;
+  }
+
+  if (vector1->element_size != vector2->element_size || vector1->count != vector2->count) {
+    return false;
+  }
+
+  const size_t size_vector1 = vc_vector_size(vector1);
+  if (size_vector1 == 0) {
+    return true;
   }
 
   return memcmp(vector1->data, vector2->data, size_vector1) == 0;
@@ -185,7 +206,7 @@ size_t vc_vector_max_size(const vc_vector* vector) {
 }
 
 bool vc_vector_reserve_count(vc_vector* vector, size_t new_count) {
-  if (new_count < vector->count) {
+  if (new_count < vector->count || new_count > SIZE_MAX / vector->element_size) {
     return false;
   }
 
@@ -214,66 +235,85 @@ void vc_vector_clear(vc_vector* vector) {
 }
 
 bool vc_vector_insert(vc_vector* vector, size_t index, const void* value) {
+  if (index > vector->count) {
+    return false;
+  }
+
   if (vc_vector_max_count(vector) < vector->count + 1) {
-    if (!vc_vector_realloc(vector, vc_vector_max_count(vector) * GROWTH_FACTOR)) {
+    size_t next_count = vc_vector_max_count(vector) + vc_vector_max_count(vector) / 2;
+    if (next_count <= vc_vector_max_count(vector)) {
+      next_count = vc_vector_max_count(vector) + 1;
+    }
+
+    if (!vc_vector_realloc(vector, next_count)) {
       return false;
     }
   }
 
-  if (!memmove(vc_vector_at(vector, index + 1),
-                        vc_vector_at(vector, index),
-                        vector->element_size * (vector->count - index))) {
+  memmove(vc_vector_at(vector, index + 1),
+          vc_vector_at(vector, index),
+          vector->element_size * (vector->count - index));
 
-    return false;
-  }
-
-  if (memcpy(vc_vector_at(vector, index),
-                      value,
-                      vector->element_size) == NULL) {
-    return false;
-  }
+  memcpy(vc_vector_at(vector, index), value, vector->element_size);
 
   ++vector->count;
   return true;
 }
 
 bool vc_vector_erase(vc_vector* vector, size_t index) {
+  if (index >= vector->count) {
+    return false;
+  }
+
   if (vector->deleter != NULL) {
     vector->deleter(vc_vector_at(vector, index));
   }
 
-  if (!memmove(vc_vector_at(vector, index),
-                        vc_vector_at(vector, index + 1),
-                        vector->element_size * (vector->count - index))) {
-    return false;
-  }
+  memmove(vc_vector_at(vector, index),
+          vc_vector_at(vector, index + 1),
+          vector->element_size * (vector->count - index - 1));
 
   vector->count--;
   return true;
 }
 
 bool vc_vector_erase_range(vc_vector* vector, size_t first_index, size_t last_index) {
+  if (first_index > last_index || last_index > vector->count) {
+    return false;
+  }
+
   if (vector->deleter != NULL) {
     vc_vector_call_deleter(vector, first_index, last_index);
   }
 
-  if (!memmove(vc_vector_at(vector, first_index),
-                        vc_vector_at(vector, last_index),
-                        vector->element_size * (vector->count - last_index))) {
-    return false;
-  }
+  memmove(vc_vector_at(vector, first_index),
+          vc_vector_at(vector, last_index),
+          vector->element_size * (vector->count - last_index));
 
   vector->count -= last_index - first_index;
   return true;
 }
 
 bool vc_vector_append(vc_vector* vector, const void* values, size_t count) {
+  if (count == 0) {
+    return true;
+  }
+
+  if (!values || count > (SIZE_MAX - vector->count)) {
+    return false;
+  }
+
   const size_t count_new = count + vc_vector_count(vector);
 
   if (vc_vector_max_count(vector) < count_new) {
-    size_t max_count_to_reserved = vc_vector_max_count(vector) * GROWTH_FACTOR;
+    size_t max_count_to_reserved = vc_vector_max_count(vector);
     while (count_new > max_count_to_reserved) {
-      max_count_to_reserved *= GROWTH_FACTOR;
+      size_t grown = max_count_to_reserved + max_count_to_reserved / 2;
+      if (grown <= max_count_to_reserved) {
+        grown = max_count_to_reserved + 1;
+      }
+
+      max_count_to_reserved = grown;
     }
 
     if (!vc_vector_realloc(vector, max_count_to_reserved)) {
@@ -281,11 +321,9 @@ bool vc_vector_append(vc_vector* vector, const void* values, size_t count) {
     }
   }
 
-  if (memcpy(vector->data + vector->count * vector->element_size,
-                      values,
-                      vector->element_size * count) == NULL) {
-    return false;
-  }
+  memcpy(vector->data + vector->count * vector->element_size,
+         values,
+         vector->element_size * count);
 
   vector->count = count_new;
   return true;
@@ -300,6 +338,10 @@ bool vc_vector_push_back(vc_vector* vector, const void* value) {
 }
 
 bool vc_vector_pop_back(vc_vector* vector) {
+  if (vector->count == 0) {
+    return false;
+  }
+
   if (vector->deleter != NULL) {
     vector->deleter(vc_vector_back(vector));
   }
@@ -309,21 +351,27 @@ bool vc_vector_pop_back(vc_vector* vector) {
 }
 
 bool vc_vector_replace(vc_vector* vector, size_t index, const void* value) {
+  if (index >= vector->count || !value) {
+    return false;
+  }
+
   if (vector->deleter != NULL) {
     vector->deleter(vc_vector_at(vector, index));
   }
 
-  return memcpy(vc_vector_at(vector, index),
-                value,
-                vector->element_size) != NULL;
+  memcpy(vc_vector_at(vector, index), value, vector->element_size);
+  return true;
 }
 
 bool vc_vector_replace_multiple(vc_vector* vector, size_t index, const void* values, size_t count) {
+  if (!values || index > vector->count || count > (vector->count - index)) {
+    return false;
+  }
+
   if (vector->deleter != NULL) {
     vc_vector_call_deleter(vector, index, index + count);
   }
 
-  return memcpy(vc_vector_at(vector, index),
-                values,
-                vector->element_size * count) != NULL;
+  memcpy(vc_vector_at(vector, index), values, vector->element_size * count);
+  return true;
 }
