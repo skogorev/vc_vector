@@ -337,6 +337,35 @@ void test_vc_vector_with_strfreefunc() {
   printf("%s passed.\n", __func__);
 }
 
+void test_vc_vector_defensive_checks() {
+  vc_vector* vector = vc_vector_create(0, sizeof(int), NULL);
+  ASSERT_NE(NULL, vector);
+
+  ASSERT_FALSE(vc_vector_pop_back(vector));
+  ASSERT_FALSE(vc_vector_erase(vector, 0));
+  ASSERT_FALSE(vc_vector_insert(vector, 1, &(int){1}));
+  ASSERT_FALSE(vc_vector_append(vector, NULL, 1));
+
+  for (int i = 0; i < 4; ++i) {
+    ASSERT_TRUE(vc_vector_push_back(vector, &i));
+  }
+
+  ASSERT_FALSE(vc_vector_erase_range(vector, 3, 2));
+  ASSERT_FALSE(vc_vector_erase_range(vector, 0, vc_vector_count(vector) + 1));
+  ASSERT_FALSE(vc_vector_replace(vector, vc_vector_count(vector), &(int){5}));
+  ASSERT_FALSE(vc_vector_replace(vector, 0, NULL));
+  ASSERT_FALSE(vc_vector_replace_multiple(vector, 1, &(int){7}, vc_vector_count(vector)));
+
+  vc_vector* copy = vc_vector_create_copy(vector);
+  ASSERT_NE(NULL, copy);
+  ASSERT_TRUE(vc_vector_is_equals(vector, copy));
+
+  vc_vector_release(copy);
+  vc_vector_release(vector);
+
+  printf("%s passed.\n", __func__);
+}
+
 void vc_vector_run_tests() {
   test_vc_vector_create();
   test_vc_vector_element_access();
@@ -344,6 +373,7 @@ void vc_vector_run_tests() {
   test_vc_vector_capacity();
   test_vc_vector_modifiers();
   test_vc_vector_with_strfreefunc();
+  test_vc_vector_defensive_checks();
 }
 
 int main() {

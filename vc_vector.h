@@ -21,7 +21,7 @@ vc_vector* vc_vector_create_copy(const vc_vector* vector);
 void vc_vector_release(vc_vector* vector);
 
 // Compares vector content
-bool vc_vector_is_equals(vc_vector* vector1, vc_vector* vector2);
+bool vc_vector_is_equals(const vc_vector* vector1, const vc_vector* vector2);
 
 // Returns constant value of the vector growth factor.
 float vc_vector_get_growth_factor();
